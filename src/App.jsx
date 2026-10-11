@@ -29,6 +29,8 @@ import {
   SiteHeader,
   SocialSection
 } from './components/PageSections';
+import { CookieBanner } from './components/CookieBanner';
+import { RogalFooter } from './components/RogalFooter';
 import {
   calculateTotals,
   createConfirmation,
@@ -39,6 +41,8 @@ import {
   recommendRoom
 } from './lib/booking';
 import { validateGuest, validatePayment } from './lib/validation';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Tag, Sparkles, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 export default function App() {
   const [stay, setStay] = useState(INITIAL_STAY);
@@ -102,7 +106,7 @@ export default function App() {
     const guestErrors = validateGuest(guest);
     setFormErrors((current) => ({ ...current, guest: guestErrors }));
     if (Object.keys(guestErrors).length > 0) {
-      setError('Fix the guest details before continuing.');
+      setError('Uzupełnij wymagane dane Gościa przed przejściem do płatności.');
       return false;
     }
     return true;
@@ -112,7 +116,7 @@ export default function App() {
     const paymentErrors = validatePayment(payment);
     setFormErrors((current) => ({ ...current, payment: paymentErrors }));
     if (Object.keys(paymentErrors).length > 0) {
-      setError('Fix the payment details before booking.');
+      setError('Popraw dane karty demonstracyjnej przed potwierdzeniem rezerwacji.');
       return false;
     }
     return true;
@@ -134,43 +138,48 @@ export default function App() {
 
   const goToDetails = () => {
     if (holdExpired) {
-      setError('Renew the room hold before continuing.');
+      setError('Odnów blokadę terminu przed kontynuacją.');
       return;
     }
     if (selectedUnavailable) {
-      setError('Choose an available room before continuing.');
+      setError('Wybierz dostępny apartament przed przejściem dalej.');
       return;
     }
     setError('');
     setStep(1);
+    const roomsElem = document.getElementById('rooms');
+    if (roomsElem) roomsElem.scrollIntoView({ behavior: 'smooth' });
   };
 
   const goToCheckout = () => {
     if (holdExpired) {
-      setError('Renew the room hold before checkout.');
+      setError('Odnów blokadę terminu przed przejściem do kasy.');
       return;
     }
     if (selectedUnavailable) {
-      setError('Choose an available room before checkout.');
+      setError('Wybierz dostępny apartament przed przejściem do kasy.');
       return;
     }
     if (!requireGuest()) return;
     setError('');
     setStep(2);
+    const roomsElem = document.getElementById('rooms');
+    if (roomsElem) roomsElem.scrollIntoView({ behavior: 'smooth' });
   };
 
   const bookStay = () => {
     if (holdExpired) {
-      setError('Renew the room hold before booking.');
+      setError('Odnów blokadę terminu przed złożeniem rezerwacji.');
       return;
     }
     if (selectedUnavailable) {
-      setError('Choose an available room before booking.');
+      setError('Wybierz dostępny apartament przed złożeniem rezerwacji.');
       return;
     }
     if (!requireGuest() || !requirePayment()) return;
     setError('');
     setConfirmation(createConfirmation());
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   if (confirmation) {
@@ -187,6 +196,9 @@ export default function App() {
     );
   }
 
+  const isPromoValid = stay.promo.trim().toUpperCase() === 'MAZURY10';
+  const hasPromoText = stay.promo.trim() !== '';
+
   return (
     <div className="app-shell">
       <SiteHeader />
@@ -199,6 +211,7 @@ export default function App() {
             <HoldTimer remaining={holdRemaining} duration={HOLD_DURATION_MS} onRenew={renewHold} />
             <AvailabilityStrip />
             <CheckoutTrustRail />
+
             <RoomProposal
               proposal={proposal}
               guests={guests}
@@ -209,8 +222,8 @@ export default function App() {
 
             <section className="panel">
               <div className="panel-title">
-                <span>{nights} nights available</span>
-                <h2>Choose your room</h2>
+                <span>Dostępne apartamenty ({nights} {nights === 1 ? 'noc' : nights < 5 ? 'noce' : 'nocy'})</span>
+                <h2>Wybierz swój widok na Jezioro Czos</h2>
               </div>
               <div className="room-list">
                 {ROOMS.map((item) => (
@@ -227,31 +240,86 @@ export default function App() {
               </div>
             </section>
 
-            <AddOnsPanel selectedAddOns={selectedAddOns} nights={nights} onToggle={toggleAddOn} />
+            <AddOnsPanel
+              selectedAddOns={selectedAddOns}
+              selectedRoomId={selectedRoomId}
+              nights={nights}
+              onToggle={toggleAddOn}
+            />
 
+            {/* Promo Code Engine with Framer Motion Spring Transitions */}
             <section className="panel promo-panel">
               <div className="panel-title">
-                <span>Offer code</span>
-                <h2>Promo</h2>
+                <span>Oferta Specjalna</span>
+                <h2>Kod Rabatowy</h2>
               </div>
-              <Field
-                label="Code"
-                value={stay.promo}
-                placeholder="Try MAZURY10"
-                required={false}
-                onChange={(promo) => setStay({ ...stay, promo })}
-              />
-              {stay.promo.trim() !== '' && (
-                <div className={stay.promo.trim().toUpperCase() === 'MAZURY10' ? 'promo-feedback success' : 'promo-feedback error'}>
-                  {stay.promo.trim().toUpperCase() === 'MAZURY10'
-                    ? '10% discount applied.'
-                    : 'Code not recognised.'}
-                </div>
-              )}
+              <div className="promo-input-row">
+                <Field
+                  label="Wpisz kod promocyjny"
+                  value={stay.promo}
+                  placeholder="Wpisz kod np. MAZURY10"
+                  required={false}
+                  onChange={(promo) => setStay({ ...stay, promo })}
+                />
+              </div>
+
+              <AnimatePresence mode="wait">
+                {hasPromoText && (
+                  <motion.div
+                    key={isPromoValid ? 'valid' : 'invalid'}
+                    initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                    transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+                    className={`promo-feedback ${isPromoValid ? 'success' : 'error'}`}
+                  >
+                    {isPromoValid ? (
+                      <div className="promo-feedback-inner">
+                        <CheckCircle2 size={16} className="text-forest" />
+                        <div>
+                          <strong>Kod MAZURY10 aktywny!</strong>
+                          <p>Naliczono 10% rabatu na cały pobyt w Luma Mazury.</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="promo-feedback-inner">
+                        <AlertCircle size={16} className="text-rose" />
+                        <div>
+                          <strong>Niepoprawny kod</strong>
+                          <p>Wpisz kod promocyjny <strong>MAZURY10</strong>, aby odebrać 10% zniżki.</p>
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </section>
 
-            {step >= 1 && <GuestForm guest={guest} errors={formErrors.guest} onChange={setGuest} />}
-            {step >= 2 && <PaymentForm payment={payment} errors={formErrors.payment} onChange={setPayment} />}
+            <AnimatePresence>
+              {step >= 1 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 15 }}
+                  transition={{ duration: 0.35 }}
+                >
+                  <GuestForm guest={guest} errors={formErrors.guest} onChange={setGuest} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+              {step >= 2 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 15 }}
+                  transition={{ duration: 0.35 }}
+                >
+                  <PaymentForm payment={payment} errors={formErrors.payment} onChange={setPayment} />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           <BookingSummary
@@ -278,6 +346,7 @@ export default function App() {
         <SocialSection />
         <PortfolioSection />
       </main>
+
       <MobileBookingBar
         room={room}
         totals={totals}
@@ -288,6 +357,9 @@ export default function App() {
         onBook={bookStay}
         onRenewHold={renewHold}
       />
+
+      <RogalFooter />
+      <CookieBanner />
     </div>
   );
 }

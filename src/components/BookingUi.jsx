@@ -1,16 +1,44 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ADD_ONS, AVAILABILITY_NOTES, HOTEL, SECURITY_FEATURES, UNAVAILABLE_STAYS } from '../data/hotel';
 import { formatHoldTime, guestCount, money } from '../lib/booking';
+import {
+  Calendar,
+  Clock,
+  AlertTriangle,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  ShieldCheck,
+  Sparkles,
+  Lock,
+  User,
+  CreditCard,
+  Plus,
+  Minus,
+  X,
+  Flame,
+  Info
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function Stepper({ step }) {
-  const steps = ['Stay', 'Details', 'Checkout'];
+  const steps = [
+    { label: 'Termin & Pokój', icon: Calendar },
+    { label: 'Dane Gości', icon: User },
+    { label: 'Płatność & Finalizacja', icon: CreditCard }
+  ];
 
   return (
-    <div className="stepper" aria-label="Booking progress">
-      {steps.map((label, index) => (
-        <span className={index <= step ? 'step active' : 'step'} key={label}>
-          <span>{index + 1}</span>
-          {label}
+    <div className="stepper" aria-label="Kroki rezerwacji">
+      {steps.map(({ label, icon: Icon }, index) => (
+        <span
+          className={`step ${index === step ? 'active current' : index < step ? 'active completed' : ''}`}
+          key={label}
+        >
+          <span className="step-num">
+            {index < step ? <Check size={13} className="step-check" /> : index + 1}
+          </span>
+          <span className="step-text">{label}</span>
         </span>
       ))}
     </div>
@@ -37,17 +65,27 @@ export function SearchBar({ stay, onChange, roomId }) {
 
   return (
     <div className="search-panel-wrap">
-      <div className="search-panel" aria-label="Search availability">
+      <div className="search-panel" aria-label="Wyszukiwarka dostępności">
         <label>
-          <span>Check in</span>
-          <input type="date" min={today} value={stay.checkIn} onChange={(e) => update('checkIn', e.target.value)} />
+          <span>Przyjazd (Check-in)</span>
+          <input
+            type="date"
+            min={today}
+            value={stay.checkIn}
+            onChange={(e) => update('checkIn', e.target.value)}
+          />
         </label>
         <label>
-          <span>Check out{nights > 0 ? ` · ${nights} night${nights !== 1 ? 's' : ''}` : ''}</span>
-          <input type="date" min={minCheckOut} value={stay.checkOut} onChange={(e) => update('checkOut', e.target.value)} />
+          <span>Wyjazd (Check-out){nights > 0 ? ` · ${nights} ${nights === 1 ? 'noc' : nights < 5 ? 'noce' : 'nocy'}` : ''}</span>
+          <input
+            type="date"
+            min={minCheckOut}
+            value={stay.checkOut}
+            onChange={(e) => update('checkOut', e.target.value)}
+          />
         </label>
-        <GuestPicker label="Adults" value={stay.adults} min={1} max={6} onChange={(v) => update('adults', v)} />
-        <GuestPicker label="Children" value={stay.children} min={0} max={4} onChange={(v) => update('children', v)} />
+        <GuestPicker label="Dorośli" value={stay.adults} min={1} max={6} onChange={(v) => update('adults', v)} />
+        <GuestPicker label="Dzieci" value={stay.children} min={0} max={4} onChange={(v) => update('children', v)} />
       </div>
       <button
         type="button"
@@ -55,7 +93,8 @@ export function SearchBar({ stay, onChange, roomId }) {
         onClick={() => setCalOpen((o) => !o)}
         aria-expanded={calOpen}
       >
-        {calOpen ? 'Hide calendar' : 'View availability calendar'}
+        <Calendar size={14} className="inline-icon" />
+        {calOpen ? 'Ukryj kalendarz obłożenia' : 'Zobacz kalendarz dostępności i obłożenia'}
       </button>
       {calOpen && <AvailabilityCalendar stay={stay} roomId={roomId} />}
     </div>
@@ -72,16 +111,20 @@ function GuestPicker({ label, value, min, max, onChange }) {
           className="guest-picker-btn"
           onClick={() => onChange(Math.max(min, value - 1))}
           disabled={value <= min}
-          aria-label={`Decrease ${label}`}
-        >−</button>
+          aria-label={`Zmniejsz: ${label}`}
+        >
+          <Minus size={13} />
+        </button>
         <span className="guest-picker-count">{value}</span>
         <button
           type="button"
           className="guest-picker-btn"
           onClick={() => onChange(Math.min(max, value + 1))}
           disabled={value >= max}
-          aria-label={`Increase ${label}`}
-        >+</button>
+          aria-label={`Zwiększ: ${label}`}
+        >
+          <Plus size={13} />
+        </button>
       </div>
     </div>
   );
@@ -113,7 +156,7 @@ function AvailabilityCalendar({ stay, roomId }) {
     })
   ];
 
-  const monthName = new Date(year, month).toLocaleString('en-US', { month: 'long', year: 'numeric' });
+  const monthName = new Date(year, month).toLocaleString('pl-PL', { month: 'long', year: 'numeric' });
   const prev = () => setDisplayDate(({ year: y, month: m }) =>
     m === 0 ? { year: y - 1, month: 11 } : { year: y, month: m - 1 }
   );
@@ -124,12 +167,16 @@ function AvailabilityCalendar({ stay, roomId }) {
   return (
     <div className="availability-cal">
       <div className="cal-header">
-        <button type="button" className="cal-nav-btn" onClick={prev} aria-label="Previous month">‹</button>
-        <span>{monthName}</span>
-        <button type="button" className="cal-nav-btn" onClick={next} aria-label="Next month">›</button>
+        <button type="button" className="cal-nav-btn" onClick={prev} aria-label="Poprzedni miesiąc">
+          <ChevronLeft size={16} />
+        </button>
+        <span className="cal-title">{monthName}</span>
+        <button type="button" className="cal-nav-btn" onClick={next} aria-label="Następny miesiąc">
+          <ChevronRight size={16} />
+        </button>
       </div>
       <div className="cal-weekdays">
-        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => <span key={d}>{d}</span>)}
+        {['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So', 'Nd'].map((d) => <span key={d}>{d}</span>)}
       </div>
       <div className="cal-grid">
         {cells.map(({ key, empty, dateStr }) => {
@@ -140,15 +187,19 @@ function AvailabilityCalendar({ stay, roomId }) {
           else if (isInRange(dateStr)) classes.push('in-range');
           if (dateStr === todayStr) classes.push('today');
           return (
-            <span key={key} className={classes.join(' ')} title={isBlocked(dateStr) ? 'Unavailable' : ''}>
+            <span
+              key={key}
+              className={classes.join(' ')}
+              title={isBlocked(dateStr) ? 'Termin niedostępny (wyprzedany lub przegląd)' : 'Dostępny'}
+            >
               {new Date(`${dateStr}T00:00:00`).getDate()}
             </span>
           );
         })}
       </div>
       <div className="cal-legend">
-        <span className="legend-blocked">Unavailable</span>
-        <span className="legend-selected">Your stay</span>
+        <span className="legend-blocked">Wyprzedane / Blokada</span>
+        <span className="legend-selected">Twój wybrany pobyt</span>
       </div>
     </div>
   );
@@ -172,22 +223,28 @@ function Lightbox({ images, startIndex, onClose }) {
   }, [images.length, onClose]);
 
   return (
-    <div className="lightbox-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-label="Room photo gallery">
+    <div className="lightbox-overlay" onClick={onClose} role="dialog" aria-modal="true" aria-label="Galeria zdjęć apartamentu">
       <div className="lightbox-inner" onClick={(e) => e.stopPropagation()}>
-        <button type="button" className="lightbox-close" onClick={onClose} aria-label="Close gallery">✕</button>
+        <button type="button" className="lightbox-close" onClick={onClose} aria-label="Zamknij galerię">
+          <X size={20} />
+        </button>
         <button
           type="button"
           className="lightbox-nav prev"
           onClick={() => setCurrent((c) => (c - 1 + images.length) % images.length)}
-          aria-label="Previous photo"
-        >‹</button>
-        <img src={images[current]} alt={`Room photo ${current + 1} of ${images.length}`} className="lightbox-img" />
+          aria-label="Poprzednie zdjęcie"
+        >
+          <ChevronLeft size={22} />
+        </button>
+        <img src={images[current]} alt={`Zdjęcie apartamentu ${current + 1} z ${images.length}`} className="lightbox-img" />
         <button
           type="button"
           className="lightbox-nav next"
           onClick={() => setCurrent((c) => (c + 1) % images.length)}
-          aria-label="Next photo"
-        >›</button>
+          aria-label="Następne zdjęcie"
+        >
+          <ChevronRight size={22} />
+        </button>
         <div className="lightbox-counter">{current + 1} / {images.length}</div>
         <div className="lightbox-dots">
           {images.map((_, i) => (
@@ -196,7 +253,7 @@ function Lightbox({ images, startIndex, onClose }) {
               type="button"
               className={i === current ? 'lb-dot active' : 'lb-dot'}
               onClick={() => setCurrent(i)}
-              aria-label={`Go to photo ${i + 1}`}
+              aria-label={`Przejdź do zdjęcia ${i + 1}`}
             />
           ))}
         </div>
@@ -207,7 +264,7 @@ function Lightbox({ images, startIndex, onClose }) {
 
 export function AvailabilityStrip() {
   return (
-    <section className="availability-strip" aria-label="Availability highlights">
+    <section className="availability-strip" aria-label="Wskaźniki obłożenia Mazur">
       {AVAILABILITY_NOTES.map((note) => (
         <article className={`availability-item ${note.tone}`} key={note.label}>
           <span>{note.label}</span>
@@ -220,20 +277,44 @@ export function AvailabilityStrip() {
 
 export function HoldTimer({ remaining, duration, onRenew }) {
   const isExpired = remaining <= 0;
+  const isUrgent = remaining > 0 && remaining < 120000; // < 2 minutes
   const progress = `${Math.max(0, Math.min(100, (remaining / duration) * 100))}%`;
 
+  let cardClasses = 'hold-card';
+  if (isExpired) cardClasses += ' expired';
+  else if (isUrgent) cardClasses += ' urgency-pulse';
+
   return (
-    <section className={isExpired ? 'hold-card expired' : 'hold-card'} aria-live="polite">
+    <section className={cardClasses} aria-live="polite">
       <div className="hold-copy">
-        <span className="eyebrow">{isExpired ? 'Hold expired' : 'Room hold'}</span>
-        <strong>{isExpired ? 'Renew to keep checking out' : `${formatHoldTime(remaining)} left`}</strong>
-        <small>{isExpired ? 'The room is no longer reserved for this demo checkout.' : 'Your selected room is temporarily reserved while you finish booking.'}</small>
+        <div className="hold-header-row">
+          <span className={`eyebrow ${isUrgent ? 'eyebrow-urgency' : ''}`}>
+            {isExpired ? 'Blokada wygasła' : isUrgent ? 'Pilna blokada terminowa' : 'Gwarancja rezerwacji'}
+          </span>
+          {isUrgent && (
+            <span className="urgency-badge">
+              <Flame size={13} className="text-amber animate-bounce" />
+              <span>Pozostało tylko {formatHoldTime(remaining)}</span>
+            </span>
+          )}
+        </div>
+        <strong>
+          {isExpired ? 'Odnów blokadę, aby zachować cenę' : `Blokada pokoju aktywna: ${formatHoldTime(remaining)}`}
+        </strong>
+        <small>
+          {isExpired
+            ? 'Termin został zwolniony dla innych gości. Kliknij poniżej, aby odnowić 10-minutową blokadę.'
+            : isUrgent
+            ? 'Uwaga: Za chwilę termin wróci do ogólnej puli. Dokończ rezerwację lub przedłuż czas.'
+            : 'Wybrany apartament jest tymczasowo zarezerwowany wyłącznie dla Ciebie na czas wypełniania formularza.'}
+        </small>
       </div>
-      <div className="hold-meter" aria-hidden="true">
+      <div className={`hold-meter ${isUrgent ? 'hold-meter-urgency' : ''}`} aria-hidden="true">
         <span style={{ width: progress }} />
       </div>
-      <button type="button" className="btn secondary" onClick={onRenew}>
-        Renew hold
+      <button type="button" className={`btn ${isUrgent ? 'primary' : 'secondary'}`} onClick={onRenew}>
+        <Clock size={14} className="inline-icon" />
+        Przedłuż blokadę o 10 min
       </button>
     </section>
   );
@@ -243,17 +324,17 @@ export function RoomProposal({ proposal, guests, nights, selected, onApply }) {
   return (
     <section className="proposal-card" aria-live="polite">
       <div>
-        <span className="eyebrow">Proposed room</span>
+        <span className="eyebrow-accent">Rekomendacja dla Twojej grupy</span>
         <h2>{proposal.room.name}</h2>
         <p>{proposal.reason}</p>
       </div>
       <div className="proposal-meta">
-        <span>{guests} {guests === 1 ? 'guest' : 'guests'}</span>
+        <span>{guests} {guests === 1 ? 'gość' : guests < 5 ? 'gości' : 'gości'}</span>
         <strong>{money(proposal.room.price * nights)}</strong>
-        <small>{nights} night stay</small>
+        <small>pobyt na {nights} {nights === 1 ? 'noc' : nights < 5 ? 'noce' : 'nocy'}</small>
       </div>
       <button type="button" className={selected ? 'btn secondary' : 'btn primary'} onClick={onApply}>
-        {selected ? 'Using proposal' : 'Use proposed room'}
+        {selected ? 'Wybrano rekomendację' : 'Wybierz rekomendowany apartament'}
       </button>
     </section>
   );
@@ -271,7 +352,7 @@ export function RoomCard({ room, selected, recommended, unavailable, nights, onS
       <div className="room-img-wrap">
         <img
           src={room.image}
-          alt={`${room.name} at ${HOTEL.name}`}
+          alt={`${room.name} w ${HOTEL.name}`}
           loading="lazy"
           onClick={() => setLightboxIndex(0)}
         />
@@ -281,7 +362,7 @@ export function RoomCard({ room, selected, recommended, unavailable, nights, onS
             className="room-photos-btn"
             onClick={() => setLightboxIndex(0)}
           >
-            View {room.images.length} photos
+            Zobacz {room.images.length} zdjęć
           </button>
         )}
       </div>
@@ -290,9 +371,9 @@ export function RoomCard({ room, selected, recommended, unavailable, nights, onS
           <div className="room-heading">
             <h3>{room.name}</h3>
             <div className="room-badges">
-              {recommended && <span className="proposal-badge">Proposed</span>}
-              {unavailable && <span className="soldout-badge">Unavailable</span>}
-              <span>{room.remaining} left</span>
+              {recommended && <span className="proposal-badge">Rekomendowany</span>}
+              {unavailable && <span className="soldout-badge">Termin zajęty</span>}
+              <span>Ostatnie {room.remaining} apartamenty</span>
             </div>
           </div>
           <p>{room.tagline}</p>
@@ -309,13 +390,26 @@ export function RoomCard({ room, selected, recommended, unavailable, nights, onS
           {room.perks.map((perk) => <span key={perk}>{perk}</span>)}
         </div>
 
+        {/* Dynamic Synergy Hint */}
+        {room.pairedDiscountNote && (
+          <div className="room-synergy-hint">
+            <Sparkles size={13} className="text-gold" />
+            <span>{room.pairedDiscountNote}</span>
+          </div>
+        )}
+
         <div className="room-action">
           <div>
             <strong>{money(room.price)}</strong>
-            <small>per night / {money(room.price * nights)} stay</small>
+            <small>za noc / {money(room.price * nights)} łącznie za pobyt</small>
           </div>
-          <button type="button" disabled={Boolean(unavailable)} className={selected ? 'btn primary' : 'btn secondary'} onClick={() => onSelect(room.id)}>
-            {selected ? 'Selected' : 'Select room'}
+          <button
+            type="button"
+            disabled={Boolean(unavailable)}
+            className={selected ? 'btn primary' : 'btn secondary'}
+            onClick={() => onSelect(room.id)}
+          >
+            {selected ? 'Wybrany apartament' : 'Wybierz ten apartament'}
           </button>
         </div>
       </div>
@@ -331,17 +425,21 @@ export function RoomCard({ room, selected, recommended, unavailable, nights, onS
   );
 }
 
-export function AddOnCard({ addOn, selected, nights, onToggle }) {
+export function AddOnCard({ addOn, selected, nights, isSynergy, onToggle }) {
   const price = addOn.perNight ? addOn.price * nights : addOn.price;
 
   return (
-    <label className={selected ? 'addon-card selected' : 'addon-card'}>
+    <label className={`addon-card ${selected ? 'selected' : ''} ${isSynergy ? 'is-synergy-match' : ''}`}>
       <input type="checkbox" checked={selected} onChange={() => onToggle(addOn.id)} />
-      <span>
-        <strong>{addOn.name}</strong>
+      <div className="addon-body">
+        <div className="addon-header">
+          <strong>{addOn.name}</strong>
+          {addOn.badge && <span className="addon-badge-pill">{addOn.badge}</span>}
+          {isSynergy && <span className="synergy-match-badge"><Sparkles size={11} /> Rekomendacja do pokoju</span>}
+        </div>
         <small>{addOn.detail}</small>
-      </span>
-      <b>{money(price)}</b>
+      </div>
+      <b className="addon-price">{money(price)}</b>
     </label>
   );
 }
@@ -369,19 +467,23 @@ export function GuestForm({ guest, errors, onChange }) {
   return (
     <section className="panel">
       <div className="panel-title">
-        <span>Guest details</span>
-        <h2>Who is checking in?</h2>
+        <span>Dane rezerwacji</span>
+        <h2>Kto będzie naszym Gościem?</h2>
       </div>
       <div className="form-grid">
-        <Field label="First name" value={guest.firstName} error={errors.firstName} onChange={(value) => update('firstName', value)} />
-        <Field label="Last name" value={guest.lastName} error={errors.lastName} onChange={(value) => update('lastName', value)} />
-        <Field label="Email" type="email" value={guest.email} error={errors.email} onChange={(value) => update('email', value)} />
-        <Field label="Phone" type="tel" value={guest.phone} error={errors.phone} onChange={(value) => update('phone', value)} />
+        <Field label="Imię" value={guest.firstName} placeholder="np. Jan" error={errors.firstName} onChange={(value) => update('firstName', value)} />
+        <Field label="Nazwisko" value={guest.lastName} placeholder="np. Kowalski" error={errors.lastName} onChange={(value) => update('lastName', value)} />
+        <Field label="Adres e-mail" type="email" value={guest.email} placeholder="jan.kowalski@example.com" error={errors.email} onChange={(value) => update('email', value)} />
+        <Field label="Numer telefonu" type="tel" value={guest.phone} placeholder="+48 501 234 567" error={errors.phone} onChange={(value) => update('phone', value)} />
       </div>
       <label className="field full">
-        <span>Arrival notes</span>
-        <textarea value={guest.requests} placeholder="Optional" onChange={(event) => update('requests', event.target.value)} />
-        <small className="field-help">Optional. Add arrival time, allergies, or accessibility notes.</small>
+        <span>Dodatkowe życzenia i uwagi do przyjazdu</span>
+        <textarea
+          value={guest.requests}
+          placeholder="Opcjonalnie: orientacyjna godzina przyjazdu, alergie pokarmowe, preferencje poduszek lub przygotowanie łóżeczka dziecięcego."
+          onChange={(event) => update('requests', event.target.value)}
+        />
+        <small className="field-help">Nasz zespół recepcji przygotuje apartament dokładnie według Twoich wytycznych.</small>
       </label>
     </section>
   );
@@ -393,23 +495,28 @@ export function PaymentForm({ payment, errors, onChange }) {
   return (
     <section className="panel">
       <div className="panel-title">
-        <span>Checkout</span>
-        <h2>Payment method</h2>
+        <span>Bezpieczna finalizacja</span>
+        <h2>Metoda płatności i gwarancja</h2>
       </div>
       <div className="payment-strip">
-        <span>Demo checkout</span>
-        <strong>No real card is charged</strong>
+        <div className="payment-strip-icon">
+          <ShieldCheck size={18} className="text-emerald" />
+        </div>
+        <div>
+          <span>Środowisko Demonstracyjne</span>
+          <strong>Żadna rzeczywista karta płatnicza nie zostanie obciążona</strong>
+        </div>
       </div>
       <div className="form-grid">
-        <Field label="Name on card" value={payment.cardName} error={errors.cardName} onChange={(value) => update('cardName', value)} />
-        <Field label="Card number" value={payment.cardNumber} placeholder="4242 4242 4242 4242" error={errors.cardNumber} onChange={(value) => update('cardNumber', value)} />
-        <Field label="Expiry" value={payment.expiry} placeholder="08/28" error={errors.expiry} onChange={(value) => update('expiry', value)} />
-        <Field label="CVC" value={payment.cvc} placeholder="123" error={errors.cvc} onChange={(value) => update('cvc', value)} />
-        <Field label="Billing ZIP" value={payment.billingZip} error={errors.billingZip} onChange={(value) => update('billingZip', value)} />
+        <Field label="Imię i nazwisko na karcie" value={payment.cardName} placeholder="JAN KOWALSKI" error={errors.cardName} onChange={(value) => update('cardName', value)} />
+        <Field label="Numer karty płatniczej" value={payment.cardNumber} placeholder="4242 4242 4242 4242" error={errors.cardNumber} onChange={(value) => update('cardNumber', value)} />
+        <Field label="Data ważności" value={payment.expiry} placeholder="08/28" error={errors.expiry} onChange={(value) => update('expiry', value)} />
+        <Field label="Kod CVC / CVV" value={payment.cvc} placeholder="123" error={errors.cvc} onChange={(value) => update('cvc', value)} />
+        <Field label="Kod pocztowy rozliczeniowy" value={payment.billingZip} placeholder="11-730" error={errors.billingZip} onChange={(value) => update('billingZip', value)} />
       </div>
       <label className="terms-row">
         <input type="checkbox" checked={payment.agree} onChange={(event) => update('agree', event.target.checked)} />
-        <span>I agree to the cancellation policy and demo checkout terms.</span>
+        <span>Akceptuję warunki pobytu, politykę anulacji do 48h przed przyjazdem oraz demonstracyjne warunki rezerwacji Luma Mazury.</span>
       </label>
       {errors.agree && <div className="field-error">{errors.agree}</div>}
       <SecurityPanel />
@@ -435,55 +542,56 @@ export function BookingSummary({
   error
 }) {
   const guests = guestCount(stay);
-  const hasDifferentProposal = proposedRoom.id !== room.id;
+  const hasDifferentProposal = proposedRoom && proposedRoom.id !== room.id;
   const holdExpired = holdRemaining <= 0;
+  const isUrgent = holdRemaining > 0 && holdRemaining < 120000;
 
   return (
     <aside className="summary">
-      <div className="summary-card">
+      <div className={`summary-card ${isUrgent ? 'summary-card-urgent' : ''}`}>
         <div className="summary-top">
           <div>
-            <span className="eyebrow">Your stay</span>
+            <span className="eyebrow">Twój wybrany pobyt</span>
             <h2>{room.name}</h2>
             <p>{HOTEL.location}</p>
           </div>
-          <span className={holdExpired ? 'summary-timer expired' : 'summary-timer'}>
-            {holdExpired ? 'Expired' : formatHoldTime(holdRemaining)}
+          <span className={`summary-timer ${holdExpired ? 'expired' : isUrgent ? 'urgency' : ''}`}>
+            {holdExpired ? 'Wygasła' : formatHoldTime(holdRemaining)}
           </span>
         </div>
 
         <div className="summary-dates">
           <div>
-            <span>Check in</span>
+            <span>Przyjazd</span>
             <strong>{stay.checkIn}</strong>
           </div>
           <div>
-            <span>Check out</span>
+            <span>Wyjazd</span>
             <strong>{stay.checkOut}</strong>
           </div>
         </div>
 
         <div className="summary-row">
-          <span>{nights} nights / {guests} guests</span>
+          <span>{nights} {nights === 1 ? 'noc' : nights < 5 ? 'noce' : 'nocy'} / {guests} {guests === 1 ? 'gość' : 'gości'}</span>
           <strong>{money(totals.room)}</strong>
         </div>
         <div className="summary-row">
-          <span>Add-ons</span>
+          <span>Pakiety & Atrakcje</span>
           <strong>{money(totals.addOns)}</strong>
         </div>
         <div className="summary-row">
-          <span>Taxes and fees</span>
+          <span>Podatek VAT (8%) i obsługa</span>
           <strong>{money(totals.taxes + totals.service)}</strong>
         </div>
         {totals.discount > 0 && (
           <div className="summary-row discount">
-            <span>Promo</span>
+            <span>Rabat z kodem promocyjnym</span>
             <strong>-{money(totals.discount)}</strong>
           </div>
         )}
 
         <div className="summary-total">
-          <span>Total due today</span>
+          <span>Łącznie do zapłaty</span>
           <strong>{money(totals.total)}</strong>
         </div>
 
@@ -495,32 +603,32 @@ export function BookingSummary({
 
         {hasDifferentProposal && (
           <div className="summary-note">
-            Proposed for this party: <strong>{proposedRoom.name}</strong>
+            Rekomendowany dla tej liczby osób: <strong>{proposedRoom.name}</strong>
           </div>
         )}
 
         {selectedUnavailable && (
           <div className="error-box">
-            This room is not available for the selected dates. {selectedUnavailable.reason}
+            Ten apartament jest niedostępny w wybranym terminie. {selectedUnavailable.reason}
           </div>
         )}
 
         {error && <div className="error-box">{error}</div>}
 
-        <div className="summary-hold">
+        <div className={`summary-hold ${isUrgent ? 'summary-hold-urgent' : ''}`}>
           <div>
-            <span>Room hold</span>
-            <strong>{holdExpired ? 'Needs renewal' : `${formatHoldTime(holdRemaining)} remaining`}</strong>
+            <span>Gwarancja blokady terminu</span>
+            <strong>{holdExpired ? 'Wymaga odnowienia' : `Pozostało ${formatHoldTime(holdRemaining)}`}</strong>
           </div>
           <div className="summary-hold-meter" aria-hidden="true">
             <span style={{ width: `${Math.max(0, Math.min(100, (holdRemaining / holdDuration) * 100))}%` }} />
           </div>
         </div>
 
-        {holdExpired && <button type="button" className="btn secondary wide" onClick={onRenewHold}>Renew hold</button>}
-        {!holdExpired && step === 0 && <button type="button" className="btn primary wide" onClick={onDetails}>Continue</button>}
-        {!holdExpired && step === 1 && <button type="button" className="btn primary wide" onClick={onCheckout}>Continue to checkout</button>}
-        {!holdExpired && step === 2 && <button type="button" className="btn primary wide" onClick={onBook}>Book stay</button>}
+        {holdExpired && <button type="button" className="btn secondary wide" onClick={onRenewHold}>Odnów blokadę terminu</button>}
+        {!holdExpired && step === 0 && <button type="button" className="btn primary wide" onClick={onDetails}>Przejdź do danych gości</button>}
+        {!holdExpired && step === 1 && <button type="button" className="btn primary wide" onClick={onCheckout}>Przejdź do płatności</button>}
+        {!holdExpired && step === 2 && <button type="button" className="btn primary wide" onClick={onBook}>Zarezerwuj pobyt bezpośrednio</button>}
       </div>
     </aside>
   );
@@ -528,17 +636,22 @@ export function BookingSummary({
 
 export function MobileBookingBar({ room, totals, step, holdRemaining, onDetails, onCheckout, onBook, onRenewHold }) {
   const handlers = [onDetails, onCheckout, onBook];
-  const labels = ['Continue', 'Checkout', 'Book stay'];
+  const labels = ['Dane gości', 'Płatność', 'Rezerwuj'];
   const holdExpired = holdRemaining <= 0;
+  const isUrgent = holdRemaining > 0 && holdRemaining < 120000;
 
   return (
-    <div className="mobile-booking-bar">
+    <div className={`mobile-booking-bar ${isUrgent ? 'mobile-bar-urgent' : ''}`}>
       <div>
-        <span>{holdExpired ? 'Hold expired' : `${room.name} / ${formatHoldTime(holdRemaining)}`}</span>
+        <span>{holdExpired ? 'Blokada wygasła' : `${room.name} · ${formatHoldTime(holdRemaining)}`}</span>
         <strong>{money(totals.total)}</strong>
       </div>
-      <button type="button" className={holdExpired ? 'btn secondary' : 'btn primary'} onClick={holdExpired ? onRenewHold : handlers[step]}>
-        {holdExpired ? 'Renew' : labels[step]}
+      <button
+        type="button"
+        className={holdExpired ? 'btn secondary' : 'btn primary'}
+        onClick={holdExpired ? onRenewHold : handlers[step]}
+      >
+        {holdExpired ? 'Odnów' : labels[step]}
       </button>
     </div>
   );
@@ -548,8 +661,8 @@ function SecurityPanel() {
   return (
     <section className="security-panel">
       <div>
-        <span className="eyebrow">Security proposal</span>
-        <h3>Production-grade booking safety</h3>
+        <span className="eyebrow-accent">Standardy Bezpieczeństwa</span>
+        <h3>Klasa korporacyjna ochrony transakcji</h3>
       </div>
       <div className="security-grid">
         {SECURITY_FEATURES.map((feature) => (
@@ -564,30 +677,70 @@ function SecurityPanel() {
 }
 
 export function CheckoutTrustRail() {
-  const items = ['No real card charge', 'Tokenized payment plan', 'Inventory hold timer'];
+  const items = [
+    'Gwarancja bezpiecznej rezerwacji',
+    'Szyfrowane połączenie TLS 1.3',
+    'Autonomiczna blokada dostępności',
+    'Bezpośrednia opieka recepcji 24/7'
+  ];
 
   return (
-    <section className="trust-rail" aria-label="Checkout trust signals">
+    <section className="trust-rail" aria-label="Sygnały zaufania rezerwacji">
       {items.map((item) => (
-        <span key={item}>{item}</span>
+        <span key={item}>
+          <ShieldCheck size={14} className="text-forest inline-icon" />
+          {item}
+        </span>
       ))}
     </section>
   );
 }
 
-export function AddOnsPanel({ selectedAddOns, nights, onToggle }) {
+export function AddOnsPanel({ selectedAddOns, nights, selectedRoomId, onToggle }) {
+  const currentRoom = selectedRoomId ? ADD_ONS : ADD_ONS;
+  const pairedAddOnId = selectedRoomId === 'lake-classic' ? 'sauna' : selectedRoomId === 'marina-terrace' ? 'kayak' : 'breakfast';
+  const pairedAddOn = ADD_ONS.find((a) => a.id === pairedAddOnId);
+
   return (
     <section className="panel">
       <div className="panel-title">
-        <span>Enhance stay</span>
-        <h2>Add-ons</h2>
+        <span>Doświadczenia & Pakiety</span>
+        <h2>Wzbogać swój pobyt nad Jeziorem Czos</h2>
       </div>
+
+      {/* Add-on Synergy Pairing Box */}
+      {pairedAddOn && (
+        <motion.div
+          className="synergy-pairing-box"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div className="synergy-icon-wrap">
+            <Sparkles size={20} className="text-gold" />
+          </div>
+          <div className="synergy-copy">
+            <span className="synergy-tag">Rekomendowane Dobranie do Twojego Apartamentu</span>
+            <strong>{pairedAddOn.name}</strong>
+            <p>{pairedAddOn.detail}</p>
+          </div>
+          <button
+            type="button"
+            className={`btn ${selectedAddOns.includes(pairedAddOn.id) ? 'secondary' : 'primary'} sm`}
+            onClick={() => onToggle(pairedAddOn.id)}
+          >
+            {selectedAddOns.includes(pairedAddOn.id) ? 'Dodano do pobytu ✓' : `Dodaj pakiet (${money(pairedAddOn.perNight ? pairedAddOn.price * nights : pairedAddOn.price)})`}
+          </button>
+        </motion.div>
+      )}
+
       <div className="addon-grid">
         {ADD_ONS.map((addOn) => (
           <AddOnCard
             key={addOn.id}
             addOn={addOn}
             nights={nights}
+            isSynergy={addOn.id === pairedAddOnId}
             selected={selectedAddOns.includes(addOn.id)}
             onToggle={onToggle}
           />

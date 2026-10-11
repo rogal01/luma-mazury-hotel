@@ -50,27 +50,27 @@ export function recommendRoom(stay) {
   if (guests <= 1) {
     return {
       room: cheapestFit,
-      reason: 'Cheapest available room that still fits a solo lake stay.'
+      reason: 'Najkorzystniejszy dostępny apartament z widokiem na jezioro dla 1 osoby.'
     };
   }
 
   if (guests >= 4 || children >= 2) {
     return {
       room: fittingRooms.find((room) => room.id === 'family-suite') ?? cheapestFit,
-      reason: 'Best for a family because it has separate sleeping and lounge space.'
+      reason: 'Idealny wybór dla rodziny: niezależne sypialnie, salon z kominkiem i przestrzeń do zabawy.'
     };
   }
 
   if (guests === 3) {
     return {
       room: fittingRooms.find((room) => room.id === 'marina-terrace') ?? cheapestFit,
-      reason: 'Extra bed and terrace comfort without paying for the family suite.'
+      reason: 'Komfort prywatnego tarasu z jacuzzi i dodatkowym miejscem do wypoczynku.'
     };
   }
 
   return {
     room: cheapestFit,
-    reason: 'Most efficient available room for two guests.'
+    reason: 'Najchętniej wybierany apartament dla 2 osób z bezpośrednim widokiem na taflę jeziora.'
   };
 }
 

@@ -2,21 +2,21 @@ const NAME_PATTERN = /^[A-Za-zÀ-ž' -]{2,}$/;
 
 export function validateGuest(guest) {
   const errors = {};
-  if (!NAME_PATTERN.test(guest.firstName.trim())) errors.firstName = 'Use at least 2 letters.';
-  if (!NAME_PATTERN.test(guest.lastName.trim())) errors.lastName = 'Use at least 2 letters.';
-  if (!isValidEmail(guest.email)) errors.email = 'Enter a valid email with @ and domain.';
-  if (!isValidPhone(guest.phone)) errors.phone = 'Use international format, for example +48 501 234 567.';
+  if (!NAME_PATTERN.test(guest.firstName.trim())) errors.firstName = 'Wprowadź co najmniej 2 litery imienia.';
+  if (!NAME_PATTERN.test(guest.lastName.trim())) errors.lastName = 'Wprowadź co najmniej 2 litery nazwiska.';
+  if (!isValidEmail(guest.email)) errors.email = 'Wprowadź poprawny adres e-mail (np. jan@domena.pl).';
+  if (!isValidPhone(guest.phone)) errors.phone = 'Wprowadź numer w formacie międzynarodowym (np. +48 501 234 567).';
   return errors;
 }
 
 export function validatePayment(payment) {
   const errors = {};
-  if (!NAME_PATTERN.test(payment.cardName.trim())) errors.cardName = 'Enter the cardholder name.';
-  if (!luhnCheck(payment.cardNumber)) errors.cardNumber = 'Enter a valid card number for the demo.';
-  if (!isFutureExpiry(payment.expiry)) errors.expiry = 'Use MM/YY and a future date.';
-  if (!/^\d{3,4}$/.test(payment.cvc.trim())) errors.cvc = 'Use 3 or 4 digits.';
-  if (!/^[A-Za-z0-9 -]{4,10}$/.test(payment.billingZip.trim())) errors.billingZip = 'Enter a valid billing postal code.';
-  if (!payment.agree) errors.agree = 'Accept the demo checkout terms.';
+  if (!NAME_PATTERN.test(payment.cardName.trim())) errors.cardName = 'Wprowadź imię i nazwisko posiadacza karty.';
+  if (!luhnCheck(payment.cardNumber)) errors.cardNumber = 'Wprowadź poprawny numer karty demonstracyjnej (np. 4242...).';
+  if (!isFutureExpiry(payment.expiry)) errors.expiry = 'Wprowadź datę ważności w formacie MM/RR (przyszły miesiąc).';
+  if (!/^\d{3,4}$/.test(payment.cvc.trim())) errors.cvc = 'Wprowadź 3 lub 4 cyfry kodu CVC/CVV.';
+  if (!/^[A-Za-z0-9 -]{4,10}$/.test(payment.billingZip.trim())) errors.billingZip = 'Wprowadź poprawny kod pocztowy (np. 11-730).';
+  if (!payment.agree) errors.agree = 'Wymagana jest akceptacja regulaminu rezerwacji demonstracyjnej.';
   return errors;
 }
 
